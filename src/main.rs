@@ -1,4 +1,5 @@
 extern crate image;
+extern crate vecmat;
 
 use std::io::Write;
 use std::str::FromStr;
