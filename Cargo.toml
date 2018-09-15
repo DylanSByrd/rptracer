@@ -1,0 +1,6 @@
+[package]
+name = "rptracer"
+version = "0.1.0"
+authors = ["DylanSByrd <mail@dylansbyrd.com>"]
+
+[dependencies]
