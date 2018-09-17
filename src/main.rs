@@ -55,13 +55,27 @@ fn parse_args() -> Config {
     }
 }
 
+fn hit_sphere(center: &Vec3<f64>, radius: f64, ray: &Ray) -> bool {
+    let ray_to_center = ray.origin - *center;
+    let a = ray.dir.dot(ray.dir);
+    let b = 2.0 * ray.dir.dot(ray_to_center);
+    let c = ray_to_center.dot(ray_to_center) - (radius * radius);
+    let discriminant = b * b - (4.0 * a * c);
+    
+    discriminant > 0.0
+}
+
 fn get_color_for_ray(ray: &Ray) -> Vec3<f64> {
+    // hardcoded sphere at 0,0,-1
+    if hit_sphere(&Vec3::<f64>::from(0.0, 0.0, -1.0), 0.5, ray) {
+        return Vec3::<f64>::from(1.0, 0.0, 0.0);
+    }
+
     let unit_dir = ray.dir.normalize();
     let time = 0.5 * (unit_dir[1]) + 1.0;
 
     (1.0 - time) * Vec3::<f64>::from(1.0, 1.0, 1.0) + time * Vec3::<f64>::from(0.5, 0.7, 1.0)
 }
-
 
 fn main() {
     let config = parse_args();
