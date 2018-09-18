@@ -1,13 +1,19 @@
 extern crate image;
 extern crate vecmat;
 
-use vecmat::vec::*;
-
 mod ray;
+mod hitable;
+mod sphere;
+
 use ray::Ray;
+use hitable::*;
+use sphere::Sphere;
+
+use vecmat::vec::*;
 
 use std::io::Write;
 use std::str::FromStr;
+use std::f64;
 
 #[derive(Debug)]
 struct Config {
@@ -55,32 +61,18 @@ fn parse_args() -> Config {
     }
 }
 
-fn hit_sphere(center: &Vec3<f64>, radius: f64, ray: &Ray) -> f64 {
-    let ray_to_center = ray.origin - *center;
-    let a = ray.dir.dot(ray.dir);
-    let b = 2.0 * ray.dir.dot(ray_to_center);
-    let c = ray_to_center.dot(ray_to_center) - (radius * radius);
-    let discriminant = b * b - (4.0 * a * c);
-    
-    if discriminant < 0.0 {
-        -1.0
-    } else {
-        (-b - discriminant.sqrt()) / (2.0 * a)
+fn get_pixel_color(ray: &Ray, hitable: &Hitable) -> Vec3<f64> {
+    match hitable.try_hit(ray, 0.0, f64::MAX) {
+        Some(hit) => {
+            0.5 * (hit.normal + Vec3::<f64>::from(1.0, 1.0, 1.0))
+        }
+        None => {
+            // background
+            let unit_dir = ray.dir.normalize();
+            let time = 0.5 * (unit_dir[1]) + 1.0;
+            (1.0 - time) * Vec3::<f64>::from(1.0, 1.0, 1.0) + time * Vec3::<f64>::from(0.5, 0.7, 1.0)            
+        }
     }
-}
-
-fn get_color_for_ray(ray: &Ray) -> Vec3<f64> {
-    // hardcoded sphere at 0,0,-1
-    let time = hit_sphere(&Vec3::<f64>::from(0.0, 0.0, -1.0), 0.5, ray);
-    if time > 0.0 {
-        let normal = ray.get_point_at_time(time) - Vec3::<f64>::from(0.0, 0.0, -1.0);
-        return 0.5 * (normal + Vec3::<f64>::from(1.0, 1.0, 1.0));
-    }
-
-    // background
-    let unit_dir = ray.dir.normalize();
-    let time = 0.5 * (unit_dir[1]) + 1.0;
-    (1.0 - time) * Vec3::<f64>::from(1.0, 1.0, 1.0) + time * Vec3::<f64>::from(0.5, 0.7, 1.0)
 }
 
 fn main() {
@@ -93,6 +85,8 @@ fn main() {
     let vertical = Vec3::<f64>::from(0.0, 2.0, 0.0);
     let origin = Vec3::<f64>::from(0.0, 0.0, 0.0);
 
+    let sphere = Sphere::new(Vec3::<f64>::from(0.0,0.0,-1.0), 0.5);
+
     let mut pixel_index = 0;
     for j in 0..config.dimy {
         for i in 0..config.dimx {
@@ -100,8 +94,8 @@ fn main() {
             let v = (config.dimy - j) as f64 / config.dimy as f64;
 
             let dir = lower_left + u * horizontal + v * vertical;
-            let ray = Ray::from_point_and_dir(origin, dir);
-            let color = get_color_for_ray(&ray);
+            let ray = Ray::new(origin, dir);
+            let color = get_pixel_color(&ray, &sphere);
             
             let ir = (255.99 * color[0]) as u8;
             let ig = (255.99 * color[1]) as u8;
