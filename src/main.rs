@@ -85,7 +85,9 @@ fn main() {
     let vertical = Vec3::<f64>::from(0.0, 2.0, 0.0);
     let origin = Vec3::<f64>::from(0.0, 0.0, 0.0);
 
-    let sphere = Sphere::new(Vec3::<f64>::from(0.0,0.0,-1.0), 0.5);
+    let mut world = HitableList::new();
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,0.0,-1.0), 0.5)));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,-100.5,-1.0), 100.0)));
 
     let mut pixel_index = 0;
     for j in 0..config.dimy {
@@ -95,7 +97,7 @@ fn main() {
 
             let dir = lower_left + u * horizontal + v * vertical;
             let ray = Ray::new(origin, dir);
-            let color = get_pixel_color(&ray, &sphere);
+            let color = get_pixel_color(&ray, &world);
             
             let ir = (255.99 * color[0]) as u8;
             let ig = (255.99 * color[1]) as u8;
