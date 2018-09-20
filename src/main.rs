@@ -6,6 +6,7 @@ mod ray;
 mod hitable;
 mod sphere;
 mod camera;
+mod utils;
 
 use ray::Ray;
 use hitable::*;
@@ -70,9 +71,10 @@ fn parse_args() -> Config {
 }
 
 fn get_pixel_color(ray: &Ray, hitable: &Hitable) -> Vec3<f64> {
-    match hitable.try_hit(ray, 0.0, f64::MAX) {
+    match hitable.try_hit(ray, 0.001, f64::MAX) {
         Some(hit) => {
-            0.5 * (hit.normal + Vec3::<f64>::from(1.0, 1.0, 1.0))
+            let target = hit.position + hit.normal + utils::get_point_in_unit_sphere();
+            0.5 * get_pixel_color(&Ray::new(hit.position, target - hit.position), hitable)
         }
         None => {
             // background
@@ -110,6 +112,9 @@ fn main() {
             }
 
             color /= config.num_samples as f64;
+            color[0] = color[0].sqrt();
+            color[1] = color[1].sqrt();
+            color[2] = color[2].sqrt();
             
             let ir = (255.99 * color[0]) as u8;
             let ig = (255.99 * color[1]) as u8;
