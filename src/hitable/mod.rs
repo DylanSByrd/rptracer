@@ -1,19 +1,26 @@
+use std::rc::Rc;
+
 use vecmat::vec::Vec3;
 
 use ray::Ray;
+use material::Material;
+
+pub mod sphere;
 
 pub struct HitInfo {
     pub time: f64,
     pub position: Vec3<f64>,
     pub normal: Vec3<f64>,
+    pub material: Rc<Material>,
 }
 
 impl HitInfo {
-    pub fn new(time: f64, position: Vec3<f64>, normal: Vec3<f64>) -> HitInfo {
+    pub fn new(time: f64, position: Vec3<f64>, normal: Vec3<f64>, material: Rc<Material>) -> HitInfo {
         HitInfo {
             time,
             position,
             normal,
+            material,
         }
     }
 }

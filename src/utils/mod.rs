@@ -1,4 +1,4 @@
-use vecmat::vec::Vec3;
+use vecmat::vec::*;
 use rand::{self, Rng};
 
 pub fn get_point_in_unit_sphere() -> Vec3<f64> {
@@ -11,4 +11,8 @@ pub fn get_point_in_unit_sphere() -> Vec3<f64> {
             return point;
         }
     }
+}
+
+pub fn reflect(reflected_vec: &Vec3<f64>, normal: &Vec3<f64>) -> Vec3<f64> {
+    *reflected_vec - 2.0 * reflected_vec.dot(*normal) * *normal
 }

@@ -1,19 +1,23 @@
+use std::rc::Rc;
+
 use vecmat::vec::*;
 
 use ray::Ray;
-use hitable::Hitable;
-use hitable::HitInfo;
+use hitable::*;
+use material::Material;
 
 pub struct Sphere {
     pub center: Vec3<f64>,
     pub radius: f64,
+    pub material: Rc<Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3<f64>, radius: f64) -> Sphere {
+    pub fn new(center: Vec3<f64>, radius: f64, material: Rc<Material>) -> Sphere {
         Sphere {
             center,
             radius,
+            material,
         }
     }
 }
@@ -33,7 +37,7 @@ impl Hitable for Sphere {
                 let position = ray.get_point_at_time(near_solution);
                 let normal = (position - self.center) / self.radius;
 
-                return Some(HitInfo::new(time, position, normal));
+                return Some(HitInfo::new(time, position, normal, self.material.clone()));
             }
 
             let far_solution = (-b + discriminant.sqrt()) / (2.0 * a);
@@ -42,7 +46,7 @@ impl Hitable for Sphere {
                 let position = ray.get_point_at_time(far_solution);
                 let normal = (position - self.center) / self.radius;
 
-                return Some(HitInfo::new(time, position, normal));
+                return Some(HitInfo::new(time, position, normal, self.material.clone()));
             }
         }
         

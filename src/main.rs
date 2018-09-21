@@ -4,14 +4,17 @@ extern crate rand;
 
 mod ray;
 mod hitable;
-mod sphere;
 mod camera;
 mod utils;
+mod material;
 
 use ray::Ray;
 use hitable::*;
 use sphere::Sphere;
 use camera::Camera;
+
+use material::lambert::Lambert;
+use material::metal::Metal;
 
 use vecmat::vec::*;
 use rand::Rng;
@@ -19,6 +22,7 @@ use rand::Rng;
 use std::io::Write;
 use std::str::FromStr;
 use std::f64;
+use std::rc::Rc;
 
 #[derive(Debug)]
 struct Config {
@@ -70,11 +74,21 @@ fn parse_args() -> Config {
     }
 }
 
-fn get_pixel_color(ray: &Ray, hitable: &Hitable) -> Vec3<f64> {
+fn get_pixel_color(ray: &Ray, hitable: &Hitable, depth: usize) -> Vec3<f64> {
     match hitable.try_hit(ray, 0.001, f64::MAX) {
         Some(hit) => {
-            let target = hit.position + hit.normal + utils::get_point_in_unit_sphere();
-            0.5 * get_pixel_color(&Ray::new(hit.position, target - hit.position), hitable)
+            if depth < 50 {
+              match hit.material.scatter_ray(ray, &hit) {
+                  Some(scatter) => {
+                      scatter.attenuation * get_pixel_color(&scatter.ray, hitable, depth + 1)
+                  }
+                  None => {
+                      Vec3::<f64>::from(0.0,0.0,0.0)
+                  }
+              }  
+            } else {
+                Vec3::<f64>::from(0.0,0.0,0.0)
+            }
         }
         None => {
             // background
@@ -92,9 +106,16 @@ fn main() {
 
     let camera = Camera::new_default();
 
+    let lambert0 = Rc::new(Lambert::new(Vec3::<f64>::from(0.8, 0.3, 0.3)));
+    let lambert1 = Rc::new(Lambert::new(Vec3::<f64>::from(0.8, 0.8, 0.0)));
+    let metal0 = Rc::new(Metal::new(Vec3::<f64>::from(0.8, 0.6, 0.2), 1.0));
+    let metal1 = Rc::new(Metal::new(Vec3::<f64>::from(0.8, 0.8, 0.8), 0.3));
+
     let mut world = HitableList::new();
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,0.0,-1.0), 0.5)));
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,-100.5,-1.0), 100.0)));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,0.0,-1.0), 0.5, lambert0.clone())));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,-100.5,-1.0), 100.0, lambert1.clone())));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(1.0,0.0,-1.0), 0.5, metal0.clone())));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-1.0,0.0,-1.0), 0.5, metal1.clone())));
 
     let mut rng = rand::thread_rng();
 
@@ -108,7 +129,7 @@ fn main() {
                 let v = ((config.dimy - j) as f64 + rng.gen::<f64>()) / config.dimy as f64;
 
                 let ray = camera.get_ray_at_uv(u, v);
-                color += get_pixel_color(&ray, &world);                
+                color += get_pixel_color(&ray, &world, 0);                
             }
 
             color /= config.num_samples as f64;
