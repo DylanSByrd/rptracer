@@ -15,6 +15,7 @@ use camera::Camera;
 
 use material::lambert::Lambert;
 use material::metal::Metal;
+use material::dielectric::Dielectric;
 
 use vecmat::vec::*;
 use rand::Rng;
@@ -106,16 +107,18 @@ fn main() {
 
     let camera = Camera::new_default();
 
-    let lambert0 = Rc::new(Lambert::new(Vec3::<f64>::from(0.8, 0.3, 0.3)));
+    let lambert0 = Rc::new(Lambert::new(Vec3::<f64>::from(0.1, 0.2, 0.5)));
     let lambert1 = Rc::new(Lambert::new(Vec3::<f64>::from(0.8, 0.8, 0.0)));
     let metal0 = Rc::new(Metal::new(Vec3::<f64>::from(0.8, 0.6, 0.2), 1.0));
-    let metal1 = Rc::new(Metal::new(Vec3::<f64>::from(0.8, 0.8, 0.8), 0.3));
+    let _metal1 = Rc::new(Metal::new(Vec3::<f64>::from(0.8, 0.8, 0.8), 0.3));
+    let dielectric0 = Rc::new(Dielectric::new(1.5));
 
     let mut world = HitableList::new();
     world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,0.0,-1.0), 0.5, lambert0.clone())));
     world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,-100.5,-1.0), 100.0, lambert1.clone())));
     world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(1.0,0.0,-1.0), 0.5, metal0.clone())));
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-1.0,0.0,-1.0), 0.5, metal1.clone())));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-1.0,0.0,-1.0), 0.5, dielectric0.clone())));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-1.0,0.0,-1.0), -0.45, dielectric0.clone())));
 
     let mut rng = rand::thread_rng();
 

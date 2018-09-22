@@ -26,12 +26,12 @@ impl Hitable for Sphere {
     fn try_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitInfo> {
         let ray_to_center = ray.origin - self.center;
         let a = ray.dir.dot(ray.dir);
-        let b = 2.0 * ray.dir.dot(ray_to_center);
+        let b = ray.dir.dot(ray_to_center);
         let c = ray_to_center.dot(ray_to_center) - (self.radius * self.radius);
-        let discriminant = b * b - (4.0 * a * c);
+        let discriminant = b * b - a * c;
 
         if discriminant > 0.0 {
-            let near_solution = (-b - discriminant.sqrt()) / (2.0 * a);
+            let near_solution = (-b - discriminant.sqrt()) / a;
             if near_solution < t_max && near_solution > t_min {
                 let time = near_solution;
                 let position = ray.get_point_at_time(near_solution);
@@ -40,9 +40,9 @@ impl Hitable for Sphere {
                 return Some(HitInfo::new(time, position, normal, self.material.clone()));
             }
 
-            let far_solution = (-b + discriminant.sqrt()) / (2.0 * a);
+            let far_solution = (-b + discriminant.sqrt()) / a;
             if far_solution < t_max && far_solution > t_min {
-                let time = near_solution;
+                let time = far_solution;
                 let position = ray.get_point_at_time(far_solution);
                 let normal = (position - self.center) / self.radius;
 

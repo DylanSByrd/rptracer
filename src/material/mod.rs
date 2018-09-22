@@ -5,6 +5,7 @@ use hitable::HitInfo;
 
 pub mod lambert;
 pub mod metal;
+pub mod dielectric;
 
 pub struct ScatterResult {
     pub attenuation: Vec3<f64>,
