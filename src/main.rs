@@ -13,6 +13,7 @@ use hitable::*;
 use sphere::Sphere;
 use camera::Camera;
 
+use material::Material;
 use material::lambert::Lambert;
 use material::metal::Metal;
 use material::dielectric::Dielectric;
@@ -100,27 +101,59 @@ fn get_pixel_color(ray: &Ray, hitable: &Hitable, depth: usize) -> Vec3<f64> {
     }
 }
 
+fn get_random_material() -> Rc<Material> {
+    let mut rng = rand::thread_rng();
+    let material_choice = rng.gen::<f64>();
+
+    if material_choice < 0.8 {
+        Rc::new(Lambert::new(Vec3::<f64>::from(rng.gen::<f64>() * rng.gen::<f64>(), rng.gen::<f64>() * rng.gen::<f64>(), rng.gen::<f64>() * rng.gen::<f64>())))
+    } else if material_choice < 0.95 {
+        Rc::new(Metal::new(Vec3::<f64>::from(0.5 * (1.0 + rng.gen::<f64>()), 0.5 * (1.0 + rng.gen::<f64>()), 0.5 * (1.0 + rng.gen::<f64>())), 0.5 * rng.gen::<f64>()))
+    } else {
+        Rc::new(Dielectric::new(1.5))
+    }
+}
+
+fn generate_scene() -> HitableList {
+    let mut world = HitableList::new();
+    
+    world.list.reserve(500);
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,-1000.0,0.0),1000.0,Rc::new(Lambert::new(Vec3::<f64>::from(0.5,0.5,0.5))))));
+
+    let mut rng = rand::thread_rng();
+
+    for a in -11..11 {
+        for b in -11..11 {
+            let center = Vec3::<f64>::from(a as f64 + 0.9 * rng.gen::<f64>(), 0.2, b as f64 + 0.9 * rng.gen::<f64>());
+            world.list.push(Box::new(Sphere::new(center, 0.2, get_random_material())));
+        }
+    }
+
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0, 1.0, 0.0), 1.0, Rc::new(Dielectric::new(1.5)))));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-4.0, 1.0, 0.0), 1.0, Rc::new(Lambert::new(Vec3::<f64>::from(0.4, 0.2, 0.1))))));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(4.0, 1.0, 0.0), 1.0, Rc::new(Metal::new(Vec3::<f64>::from(0.7, 0.6, 0.5), 0.0)))));
+
+    world
+}
+
 fn main() {
     let config = parse_args();
 
     let mut pixel_buf: Vec<u8> = vec![0; config.dimx * config.dimy * 3];
 
-    let camera = Camera::new(Vec3::<f64>::from(-2.0,2.0,1.0), Vec3::<f64>::from(0.0,0.0,-1.0), Vec3::<f64>::from(0.0,1.0,0.0), 90.0, config.dimx as f64 / config.dimy as f64);
+    let look_from = Vec3::<f64>::from(13.0,2.0,3.0);
+    let look_at = Vec3::<f64>::from(0.0,0.0,0.0);
+    let camera = Camera::new(
+        look_from, 
+        look_at, 
+        Vec3::<f64>::from(0.0,1.0,0.0), 
+        20.0, 
+        config.dimx as f64 / config.dimy as f64,
+        0.1,
+        10.0);
+        //(look_from - look_at).length());
 
-    let _lambert0 = Rc::new(Lambert::new(Vec3::<f64>::from(0.1, 0.2, 0.5)));
-    let _lambert1 = Rc::new(Lambert::new(Vec3::<f64>::from(0.8, 0.8, 0.0)));
-    let _lambert2 = Rc::new(Lambert::new(Vec3::<f64>::from(0.0,0.0,1.0)));
-    let _lambert3 = Rc::new(Lambert::new(Vec3::<f64>::from(1.0,0.0,0.0)));
-    let _metal0 = Rc::new(Metal::new(Vec3::<f64>::from(0.8, 0.6, 0.2), 1.0));
-    let _metal1 = Rc::new(Metal::new(Vec3::<f64>::from(0.8, 0.8, 0.8), 0.3));
-    let _dielectric0 = Rc::new(Dielectric::new(1.5));
-
-    let mut world = HitableList::new();
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,0.0,-1.0), 0.5, _lambert0.clone())));
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,-100.5,-1.0), 100.0, _lambert1.clone())));
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(1.0,0.0,-1.0), 0.5, _metal0.clone())));
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-1.0,0.0,-1.0), 0.5, _dielectric0.clone())));
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-1.0,0.0,-1.0), -0.45, _dielectric0.clone())));
+    let world = generate_scene();
 
     let mut rng = rand::thread_rng();
 
