@@ -22,7 +22,7 @@ use rand::Rng;
 
 use std::io::Write;
 use std::str::FromStr;
-use std::f64;
+use std::f64::{self, consts::PI};
 use std::rc::Rc;
 
 #[derive(Debug)]
@@ -105,20 +105,22 @@ fn main() {
 
     let mut pixel_buf: Vec<u8> = vec![0; config.dimx * config.dimy * 3];
 
-    let camera = Camera::new_default();
+    let camera = Camera::new(Vec3::<f64>::from(-2.0,2.0,1.0), Vec3::<f64>::from(0.0,0.0,-1.0), Vec3::<f64>::from(0.0,1.0,0.0), 90.0, config.dimx as f64 / config.dimy as f64);
 
-    let lambert0 = Rc::new(Lambert::new(Vec3::<f64>::from(0.1, 0.2, 0.5)));
-    let lambert1 = Rc::new(Lambert::new(Vec3::<f64>::from(0.8, 0.8, 0.0)));
-    let metal0 = Rc::new(Metal::new(Vec3::<f64>::from(0.8, 0.6, 0.2), 1.0));
+    let _lambert0 = Rc::new(Lambert::new(Vec3::<f64>::from(0.1, 0.2, 0.5)));
+    let _lambert1 = Rc::new(Lambert::new(Vec3::<f64>::from(0.8, 0.8, 0.0)));
+    let _lambert2 = Rc::new(Lambert::new(Vec3::<f64>::from(0.0,0.0,1.0)));
+    let _lambert3 = Rc::new(Lambert::new(Vec3::<f64>::from(1.0,0.0,0.0)));
+    let _metal0 = Rc::new(Metal::new(Vec3::<f64>::from(0.8, 0.6, 0.2), 1.0));
     let _metal1 = Rc::new(Metal::new(Vec3::<f64>::from(0.8, 0.8, 0.8), 0.3));
-    let dielectric0 = Rc::new(Dielectric::new(1.5));
+    let _dielectric0 = Rc::new(Dielectric::new(1.5));
 
     let mut world = HitableList::new();
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,0.0,-1.0), 0.5, lambert0.clone())));
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,-100.5,-1.0), 100.0, lambert1.clone())));
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(1.0,0.0,-1.0), 0.5, metal0.clone())));
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-1.0,0.0,-1.0), 0.5, dielectric0.clone())));
-    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-1.0,0.0,-1.0), -0.45, dielectric0.clone())));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,0.0,-1.0), 0.5, _lambert0.clone())));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(0.0,-100.5,-1.0), 100.0, _lambert1.clone())));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(1.0,0.0,-1.0), 0.5, _metal0.clone())));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-1.0,0.0,-1.0), 0.5, _dielectric0.clone())));
+    world.list.push(Box::new(Sphere::new(Vec3::<f64>::from(-1.0,0.0,-1.0), -0.45, _dielectric0.clone())));
 
     let mut rng = rand::thread_rng();
 
